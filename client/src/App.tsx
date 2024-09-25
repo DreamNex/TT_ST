@@ -10,9 +10,17 @@ const App: React.FC = () => {
   const[pageCount, setPageCount] = useState(0);
   const[loading, setLoading] = useState(false);
   const[searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handlePageClick = (event: {selected: number}) => {
-    fetchData(event.selected +1);
+    const selectedPage = (event.selected +1);
+    setCurrentPage(selectedPage);
+    fetchData(selectedPage);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    fetchData(1);
   };
 
   //Upload file
@@ -42,7 +50,8 @@ const App: React.FC = () => {
       setLoading(true);
       const response = await axios.get(`http://localhost:7001/showdata?page=${currentPage}&limit=10`);
       setData(response.data.data);
-      setPageCount(response.data.totalPages);
+      setPageCount(response.data.totalPage);
+      setCurrentPage(currentPage -1);
     }catch (err){
       console.error('Error while fetching data', err);
     }finally{
@@ -78,20 +87,24 @@ const App: React.FC = () => {
        <h1>CSV Application</h1>
 
        {/*For file upload*/}
-       <input type="file" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}/>
-       <button onClick={uploadFile} disabled={!file || loading}>
+       <input type="file" id="fileupload" data-testid="file" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}/>
+       <button data-testid="upload"onClick={uploadFile} disabled={!file || loading}>
         {loading ? 'Uploading file..' : 'Upload'}
        </button>
 
        {/*For search data*/}
        <input type="text" placeholder='Search' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
        onKeyDown={(e) => e.key === 'Enter' && searchData(searchTerm)} />
-       <button onClick={()=> searchData(searchTerm)}>Search</button>
-
+       <button onClick={()=> searchData(searchTerm)}>
+        Search
+        </button>
+       <button onClick={clearSearch} disabled={!searchTerm}>
+        Clear
+        </button>
 
        {/*For Data*/}
        {loading ? <p>Loading...</p> :(
-        <>
+        <div className="table-container">
         <table>
           <thead>
             <tr>
@@ -117,14 +130,23 @@ const App: React.FC = () => {
             ))}
           </tbody>
         </table>
-
+        
         {/*pagination*/}
         {pageCount > 1 && (
-          <ReactPaginate previousLabel={"previous"} nextLabel={"next"} breakLabel={"...."} pageCount={pageCount}
-          marginPagesDisplayed={2} pageRangeDisplayed={5} onPageChange={handlePageClick} containerClassName={"pagination"}
-          activeClassName={'active'}/>
+          <ReactPaginate 
+          previousLabel={'previous'} 
+          nextLabel={'next'} 
+          breakLabel={'....'} 
+          pageCount={pageCount}
+          marginPagesDisplayed={2} 
+          pageRangeDisplayed={5} 
+          onPageChange={handlePageClick} 
+          containerClassName={'pagination'}
+          activeClassName={'active'}
+          forcePage={currentPage}
+          />
         )}
-        </>
+        </div>
        )}
 
     </div>

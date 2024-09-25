@@ -11,6 +11,8 @@ const PORT = 7001;
 app.use(cors());
 app.use(express.json());
 
+module.exports = server
+
 let filedata = [];
 
 //multer variable
